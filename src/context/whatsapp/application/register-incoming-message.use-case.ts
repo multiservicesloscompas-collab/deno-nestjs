@@ -13,9 +13,9 @@ async (payload) => {
   const entry = payload.entry?.[0];
   const change = entry?.changes?.[0];
   const messageData = change?.value?.messages?.[0];
-
+  
   if (!messageData) return;
-
+  
   const message: WhatsAppMessage = {
     from: messageData.from,
     to: change.value.metadata.display_phone_number,
@@ -23,6 +23,7 @@ async (payload) => {
     timestamp: Number(messageData.timestamp),
     messageId: messageData.id,
   };
+  console.info("[Mensaje recibido en webhook]: ", message)
 
   await repository.save(message);
 };

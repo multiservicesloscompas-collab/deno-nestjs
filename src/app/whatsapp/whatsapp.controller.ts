@@ -21,10 +21,16 @@ export class WhatsAppController {
     @Res() res: Response,
   ) {
     const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "my_token";
+    
+    console.log(`[WhatsApp] Webhook verification request:`, { mode, token, challenge });
+    console.log(`[WhatsApp] Expected token:`, verifyToken);
 
     if (mode === "subscribe" && token === verifyToken) {
+      console.log(`[WhatsApp] Webhook verified successfully!`);
       return res.status(200).send(challenge);
     }
+    
+    console.warn(`[WhatsApp] Webhook verification failed: Unauthorized`);
     return res.status(403).end();
   }
 

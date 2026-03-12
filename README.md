@@ -35,6 +35,9 @@ src/
 - **Modo Producción**: `deno task start`.
 - **Verificación/Build**: `deno task build`.
 
+## 🌐 Despliegue
+Este proyecto utiliza **GitHub Actions** para el despliegue automático en **Deno Deploy**. Cada push a la rama `main` dispara el proceso de verificación (`deno task build`) y despliegue a producción.
+
 ## 📐 Patrones Aplicados
 - **Patrón Make**: Las funciones de `/context` reciben sus dependencias por currying (`makeService(deps)(input)`).
 - **Functional Ports**: Los puertos no son interfaces con métodos, sino firmas de tipos de funciones.

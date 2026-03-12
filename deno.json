@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run -A --watch src/app/main.ts",
-    "start": "deno run -A src/app/main.ts",
+    "dev": "deno run -A --env --watch src/app/main.ts",
+    "start": "deno run -A --env src/app/main.ts",
     "build": "deno check src/app/main.ts"
   },
   "compilerOptions": {

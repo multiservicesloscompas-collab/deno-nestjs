@@ -11,6 +11,7 @@
 Estamos construyendo una aplicación de mensajería para WhatsApp utilizando la API de Meta.
 - **Objetivo**: Integración fluida para envío/recepción de mensajes y gestión de flujos automatizados.
 - **Stack**: NestJS + Deno 2.x + Arquitectura Hexagonal.
+- **Despliegue**: CI/CD vía GitHub Actions + Deno Deploy.
 
 ## Senior Engineer Mindset (Reglas de Colaboración)
 > [!IMPORTANT]
