@@ -37,12 +37,14 @@ export class WhatsAppController {
   @Post("webhook")
   @HttpCode(HttpStatus.OK)
   async handleWebhook(@Body() payload: MetaWebhookPayload) {
+    console.info("[POST WEBHOOK]: catching message")
     await this.registerIncomingMessageUseCase(payload);
     return { status: "received" };
   }
 
   @Post("send")
   async sendMessage(@Body() body: { to: string; message: string }) {
+    console.info("[POST SEND]: SENDING MESSAGE")
     await this.sendMessageUseCase(body.to, body.message);
     return { status: "sent" };
   }
