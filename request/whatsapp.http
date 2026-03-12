@@ -1,8 +1,11 @@
+# @urlbase = http://localhost:3000
+@urlbase = https://ws-loscompas.lc.deno.net
+
 ### Verificación del Webhook (GET)
-GET http://localhost:3000/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=mi_token_secreto_123&hub.challenge=12345
+GET {{urlbase}}/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=<verify_token>>&hub.challenge=12345
 
 ### Escuchar Mensaje (POST) - Simulación de Meta
-POST http://localhost:3000/whatsapp/webhook
+POST {{urlbase}}/whatsapp/webhook
 Content-Type: application/json
 
 {
@@ -46,7 +49,7 @@ Content-Type: application/json
 }
 
 ### Enviar Mensaje (POST)
-POST http://localhost:3000/whatsapp/send
+POST {{urlbase}}/whatsapp/send
 Content-Type: application/json
 
 {

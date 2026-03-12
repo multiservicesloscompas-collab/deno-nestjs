@@ -4,6 +4,11 @@
     "start": "deno run -A --env src/app/main.ts",
     "build": "deno check src/app/main.ts"
   },
+  "imports": {
+    "@nestjs/common": "npm:@nestjs/common@^10.0.0",
+    "@nestjs/core": "npm:@nestjs/core@^10.0.0",
+    "@google/generative-ai": "npm:@google/generative-ai@^0.21.0"
+  },
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
