@@ -1,0 +1,55 @@
+### Verificación del Webhook (GET)
+GET http://localhost:3000/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=mi_token_secreto_123&hub.challenge=12345
+
+### Escuchar Mensaje (POST) - Simulación de Meta
+POST http://localhost:3000/whatsapp/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "882352865105153",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "16505551111",
+              "phone_number_id": "123456123456"
+            },
+            "contacts": [
+              {
+                "profile": {
+                  "name": "Kemberth Nieves"
+                },
+                "wa_id": "1234567890"
+              }
+            ],
+            "messages": [
+              {
+                "from": "1234567890",
+                "id": "wamid.HBgLMTIxMjM0NTY3ODkVAgASGBQzQjE2REI0RTU2N0E4OTAxOUEA",
+                "timestamp": "1603094400",
+                "text": {
+                  "body": "Hola, prueba de mensaje"
+                },
+                "type": "text"
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+### Enviar Mensaje (POST)
+POST http://localhost:3000/whatsapp/send
+Content-Type: application/json
+
+{
+  "to": "1234567890",
+  "message": "Respuesta desde el endpoint de envío"
+}
