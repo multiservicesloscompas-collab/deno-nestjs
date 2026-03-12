@@ -33,6 +33,7 @@ src/
 ## 🚀 Inicio Rápido
 - **Modo Desarrollo**: `deno task dev` (con auto-reload).
 - **Modo Producción**: `deno task start`.
+- **Verificación/Build**: `deno task build`.
 
 ## 📐 Patrones Aplicados
 - **Patrón Make**: Las funciones de `/context` reciben sus dependencias por currying (`makeService(deps)(input)`).

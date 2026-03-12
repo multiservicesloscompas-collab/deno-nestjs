@@ -4,6 +4,7 @@
 - Instalación de dependencias: `deno install`
 - Modo desarrollo: `deno task dev`
 - Modo producción: `deno task start`
+- Verificación/Build: `deno task build`
 - Ejecutar pruebas: `deno test` (Placeholder - configurar cuando se añadan tests)
 
 ## Contexto del Proyecto: WhatsApp Messaging App

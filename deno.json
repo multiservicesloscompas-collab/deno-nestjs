@@ -1,13 +1,13 @@
 {
   "tasks": {
     "dev": "deno run -A --watch src/app/main.ts",
-    "start": "deno run -A src/app/main.ts"
+    "start": "deno run -A src/app/main.ts",
+    "build": "deno check src/app/main.ts"
   },
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false,
-    "target": "ES2022"
+    "strictPropertyInitialization": false
   },
   "nodeModulesDir": "auto"
 }
