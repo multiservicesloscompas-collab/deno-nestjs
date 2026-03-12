@@ -1,0 +1,5 @@
+### Ping Endpoint
+GET http://localhost:3000/ping
+
+### Health Endpoint
+GET http://localhost:3000/health
