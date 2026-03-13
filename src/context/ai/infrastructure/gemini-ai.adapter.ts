@@ -10,7 +10,7 @@ export class GeminiAIAdapter implements AIPort {
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: SYSTEM_PROMPT,
       tools: [
         {
@@ -52,7 +52,17 @@ export class GeminiAIAdapter implements AIPort {
         const responses = [];
         for (const call of functionCalls) {
           if (call.functionCall?.name === "getCurrentTime") {
-            const currentTime = new Date().toISOString();
+            const currentTime = new Intl.DateTimeFormat('es-VE', {
+              timeZone: 'America/Caracas',
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false,
+            }).format(new Date());
             responses.push({
               functionResponse: {
                 name: "getCurrentTime",
