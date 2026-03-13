@@ -7,8 +7,8 @@ export class GeminiAIAdapter implements AIPort {
   private model: GenerativeModel;
 
   constructor(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);    
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-3-flash" });
   }
 
   async generateText(prompt: string): Promise<AIResponse> {
@@ -20,9 +20,10 @@ export class GeminiAIAdapter implements AIPort {
       return {
         text,
       };
-    } catch (error) {
-      console.error("[GeminiAIAdapter Error]:", error);
-      throw new Error("Failed to generate response from Gemini AI");
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error);
+      console.error("[GeminiAIAdapter Error Details]:", error);
+      throw new Error(`Failed to generate response from Gemini AI: ${errorMessage}`);
     }
   }
 }
