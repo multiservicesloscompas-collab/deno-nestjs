@@ -1,4 +1,4 @@
-import { WhatsAppRepository } from "./ports.ts";
+import { WhatsAppRepository, MessageBufferPort } from "./ports.ts";
 import { MetaWebhookPayload } from "../domain/webhook-payload.interface.ts";
 import { WhatsAppMessage } from "../domain/whatsapp-message.interface.ts";
 import { ChatWithAIUseCase } from "../../ai/application/ports.ts";
@@ -12,33 +12,40 @@ export const makeRegisterIncomingMessageUseCase = (
   repository: WhatsAppRepository,
   chatWithAIUseCase: ChatWithAIUseCase,
   sendMessageUseCase: SendMessageUseCase,
-): RegisterIncomingMessageUseCase =>
-async (payload) => {
-  const entry = payload.entry?.[0];
-  const change = entry?.changes?.[0];
-  const messageData = change?.value?.messages?.[0];
+  messageBuffer: MessageBufferPort,
+): RegisterIncomingMessageUseCase => {
   
-  if (!messageData) return;
-  
-  const message: WhatsAppMessage = {
-    from: messageData.from,
-    to: change.value.metadata.display_phone_number,
-    body: messageData.text.body,
-    timestamp: Number(messageData.timestamp),
-    messageId: messageData.id,
+  // Suscribirse al buffer para procesar mensajes cuando estén listos
+  messageBuffer.subscribe(async (sender, mergedText) => {
+    try {
+      const aiResponse = await chatWithAIUseCase(sender, mergedText);
+      console.info("[IA respondió con memoria - BUFFERED]: ", aiResponse);
+
+      // Enviar respuesta a WhatsApp
+      await sendMessageUseCase(sender, aiResponse);
+    } catch (error) {
+      console.error("[Error procesando IA buffered o enviando respuesta]:", error);
+    }
+  });
+
+  return async (payload) => {
+    const entry = payload.entry?.[0];
+    const change = entry?.changes?.[0];
+    const messageData = change?.value?.messages?.[0];
+    
+    if (!messageData) return;
+    
+    const message: WhatsAppMessage = {
+      from: messageData.from,
+      to: change.value.metadata.display_phone_number,
+      body: messageData.text.body,
+      timestamp: Number(messageData.timestamp),
+      messageId: messageData.id,
+    };
+
+    await repository.save(message);
+
+    // En lugar de procesar inmediatamente, añadimos al buffer
+    messageBuffer.addMessage(message.from, message.body);
   };
-  console.info("[Mensaje recibido en webhook]: ", message)
-
-  await repository.save(message);
-
-  // Procesar con IA (usando memoria)
-  try {
-    const aiResponse = await chatWithAIUseCase(message.from, message.body);
-    console.info("[IA respondió con memoria]: ", aiResponse);
-
-    // Enviar respuesta a WhatsApp
-    await sendMessageUseCase(message.from, aiResponse);
-  } catch (error) {
-    console.error("[Error procesando IA con memoria o enviando respuesta]:", error);
-  }
 };

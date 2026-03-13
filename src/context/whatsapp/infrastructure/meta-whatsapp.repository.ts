@@ -25,6 +25,12 @@ export const makeMetaWhatsAppRepository = (): WhatsAppRepository => {
 
       if (!response.ok) {
         const error = await response.json();
+        const errorCode = error?.error?.code;
+        
+        if (errorCode === 190) {
+          throw new Error(`Meta API Authentication Error (190): El WHATSAPP_ACCESS_TOKEN ha expirado o es inválido. Genera uno nuevo en el portal de Meta for Developers.`);
+        }
+
         throw new Error(`Meta API Error: ${JSON.stringify(error)}`);
       }
     },
