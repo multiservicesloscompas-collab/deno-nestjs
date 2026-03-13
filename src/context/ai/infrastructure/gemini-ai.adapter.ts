@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerativeModel, SchemaType } from "@google/generative-ai";
 import { AIPort } from "../application/ports.ts";
 import { AIMessage, AIResponse } from "../domain/ai-message.interface.ts";
 import { SYSTEM_PROMPT } from "../domain/system-prompt.ts";
@@ -10,8 +10,23 @@ export class GeminiAIAdapter implements AIPort {
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       systemInstruction: SYSTEM_PROMPT,
+      tools: [
+        {
+          functionDeclarations: [
+            {
+              name: "getCurrentTime",
+              description: "Retorna el día y la hora actual en formato ISO.",
+              parameters: {
+                type: SchemaType.OBJECT,
+                properties: {},
+                required: [],
+              },
+            },
+          ],
+        },
+      ],
     });
   }
 
@@ -26,9 +41,33 @@ export class GeminiAIAdapter implements AIPort {
         })),
       });
 
-      const result = await chat.sendMessage(prompt);
-      const response = await result.response;
-      const text = response.text();
+      let result = await chat.sendMessage(prompt);
+      let response = await result.response;
+      let text = response.text();
+
+      // Handle function calls
+      const functionCalls = response.candidates?.[0].content.parts.filter(part => part.functionCall);
+
+      if (functionCalls && functionCalls.length > 0) {
+        const responses = [];
+        for (const call of functionCalls) {
+          if (call.functionCall?.name === "getCurrentTime") {
+            const currentTime = new Date().toISOString();
+            responses.push({
+              functionResponse: {
+                name: "getCurrentTime",
+                response: { currentTime },
+              },
+            });
+          }
+        }
+
+        if (responses.length > 0) {
+          result = await chat.sendMessage(responses);
+          response = await result.response;
+          text = response.text();
+        }
+      }
 
       return {
         text,
