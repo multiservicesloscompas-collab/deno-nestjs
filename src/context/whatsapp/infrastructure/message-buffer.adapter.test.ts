@@ -9,9 +9,10 @@ Deno.test("MessageBuffer groups messages and triggers callback after timeout", a
     // Create buffer with short timeout for testing
     const buffer = makeInMemoryMessageBuffer(100);
     
-    buffer.subscribe(async (sender, text) => {
+    buffer.subscribe((_sender, text) => {
       callCount++;
       receivedText = text;
+      return Promise.resolve();
     });
 
     buffer.addMessage("sender1", "hola");
@@ -29,8 +30,9 @@ Deno.test("MessageBuffer groups messages and triggers callback after timeout", a
     const calls: Record<string, string> = {};
     const buffer = makeInMemoryMessageBuffer(100);
 
-    buffer.subscribe(async (sender, text) => {
+    buffer.subscribe((sender, text) => {
       calls[sender] = text;
+      return Promise.resolve();
     });
 
     buffer.addMessage("userA", "A1");

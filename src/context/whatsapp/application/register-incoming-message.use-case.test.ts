@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { makeRegisterIncomingMessageUseCase } from "./register-incoming-message.use-case.ts";
-import { WhatsAppRepository, MessageBufferPort } from "./ports.ts";
+import { WhatsAppRepository, MessageBufferPort, MessageBufferCallback } from "./ports.ts";
 import { MetaWebhookPayload } from "../domain/webhook-payload.interface.ts";
 
 Deno.test("RegisterIncomingMessageUseCase uses buffer to group messages", async () => {
@@ -11,16 +11,16 @@ Deno.test("RegisterIncomingMessageUseCase uses buffer to group messages", async 
     save: async () => {},
   };
 
-  const mockChatWithAI = async (_id: string, prompt: string) => {
+  const mockChatWithAI = (_id: string, prompt: string) => {
     aiCalls++;
     lastPrompt = prompt;
-    return "ai response";
+    return Promise.resolve("ai response");
   };
 
-  const mockSendMessage = async () => {};
+  const mockSendMessage = () => Promise.resolve();
 
   // Simple manual buffer for testing
-  let bufferCallback: any = null;
+  let bufferCallback: MessageBufferCallback | null = null;
   const mockBuffer: MessageBufferPort = {
     addMessage: (_sender, text) => {
       if (bufferCallback) bufferCallback(_sender, text);
