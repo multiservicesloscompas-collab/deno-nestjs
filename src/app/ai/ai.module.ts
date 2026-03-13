@@ -1,9 +1,10 @@
 import { Module, DynamicModule } from "@nestjs/common";
 import { GeminiAIAdapter } from "../../context/ai/infrastructure/gemini-ai.adapter.ts";
 import { makeGenerateAIResponseUseCase } from "../../context/ai/application/generate-ai-response.use-case.ts";
+import { env } from "../../config/env.ts";
 
-export const GENERATE_AI_RESPONSE_USE_CASE = "GENERATE_AI_RESPONSE_USE_CASE";
 export const AI_PORT = "AI_PORT";
+export const GENERATE_AI_RESPONSE_USE_CASE = "GENERATE_AI_RESPONSE_USE_CASE";
 
 @Module({})
 export class AIModule {
@@ -14,12 +15,7 @@ export class AIModule {
         {
           provide: AI_PORT,
           useFactory: () => {
-            const apiKey = Deno.env.get("GEMINI_API_KEY");
-            if (!apiKey) {
-              console.error("CRITICAL ERROR: GEMINI_API_KEY is not defined in environment variables.");
-              throw new Error("GEMINI_API_KEY is missing. If you are using Deno Deploy, set it in the project Settings > Environment Variables.");
-            }
-            return new GeminiAIAdapter(apiKey);
+            return new GeminiAIAdapter(env.AI.GEMINI_API_KEY);
           },
         },
         {

@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post, Query, Res } from "npm:@nestjs/common";
-import type { Response } from "npm:express";
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post, Query, Res } from "@nestjs/common";
+import type { Response } from "express";
 import type { SendMessageUseCase } from "../../context/whatsapp/application/send-message.use-case.ts";
 import type { RegisterIncomingMessageUseCase } from "../../context/whatsapp/application/register-incoming-message.use-case.ts";
 import type { MetaWebhookPayload } from "../../context/whatsapp/domain/webhook-payload.interface.ts";
+import { env } from "../../config/env.ts";
 
 @Controller("whatsapp")
 export class WhatsAppController {
@@ -20,7 +21,7 @@ export class WhatsAppController {
     @Query("hub.challenge") challenge: string,
     @Res() res: Response,
   ) {
-    const verifyToken = Deno.env.get("WHATSAPP_VERIFY_TOKEN") || "my_token";
+    const verifyToken = env.WHATSAPP.VERIFY_TOKEN;
     
     console.log(`[WhatsApp] Webhook verification request:`, { mode, token, challenge });
     console.log(`[WhatsApp] Expected token:`, verifyToken);

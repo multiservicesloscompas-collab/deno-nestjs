@@ -2,8 +2,7 @@
 @urlbase = https://ws-loscompas.lc.deno.net
 
 ### Verificación del Webhook (GET)
-GET {{urlbase}}/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=<verify_token>>&hub.challenge=12345
-
+GET {{urlbase}}/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=bWlfdG9rZW5fc2VjcmV0b19sY19sb3Njb21wYXNfMTIz&hub.challenge=12345
 ### Escuchar Mensaje (POST) - Simulación de Meta
 POST {{urlbase}}/whatsapp/webhook
 Content-Type: application/json

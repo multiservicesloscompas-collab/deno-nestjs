@@ -1,5 +1,6 @@
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { WhatsAppController } from "./whatsapp.controller.ts";
+import { env } from "../../config/env.ts";
 
 // Mocking Response and UseCases
 const mockResponse = () => {
@@ -40,7 +41,7 @@ Deno.test("WhatsAppController.verifyWebhook returns challenge if token matches",
   const res = mockResponse();
   const challenge = "12345";
   
-  controller.verifyWebhook("subscribe", "mi_token_secreto", challenge, res);
+  controller.verifyWebhook("subscribe", env.WHATSAPP.VERIFY_TOKEN, challenge, res);
   
   assertEquals(res.statusCode, 200);
   assertEquals(res.body, challenge);

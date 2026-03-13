@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { makeHealthService, makePingService } from "./health.service.ts";
 
 Deno.test("HealthService - health should return status UP and current date", async () => {

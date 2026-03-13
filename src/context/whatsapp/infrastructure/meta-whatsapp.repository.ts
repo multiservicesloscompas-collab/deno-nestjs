@@ -1,18 +1,13 @@
 import { WhatsAppRepository } from "../application/ports.ts";
 import { WhatsAppMessage } from "../domain/whatsapp-message.interface.ts";
+import { env } from "../../../config/env.ts";
 
 export const makeMetaWhatsAppRepository = (): WhatsAppRepository => {
-  const accessToken = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+  const { ACCESS_TOKEN: accessToken, PHONE_NUMBER_ID: phoneNumberId } = env.WHATSAPP;
   const apiUrl = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
 
   return {
     send: async ({ to, text }) => {
-      if (!accessToken || !phoneNumberId) {
-        console.warn("[WhatsAppRepository] Missing credentials. Message logged only.");
-        console.log(`[WhatsApp] To: ${to}, Text: ${text}`);
-        return;
-      }
 
       const response = await fetch(apiUrl, {
         method: "POST",

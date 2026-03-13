@@ -1,3 +1,4 @@
+import "../config/env.ts";
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.ts';
 
