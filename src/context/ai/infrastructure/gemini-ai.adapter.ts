@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import { AIPort } from "../application/ports.ts";
-import { AIResponse } from "../domain/ai-message.interface.ts";
+import { AIMessage, AIResponse } from "../domain/ai-message.interface.ts";
 
 export class GeminiAIAdapter implements AIPort {
   private genAI: GoogleGenerativeAI;
@@ -8,12 +8,21 @@ export class GeminiAIAdapter implements AIPort {
 
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-3-flash" });
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   }
 
-  async generateText(prompt: string): Promise<AIResponse> {
+  async generateText(prompt: string, history: AIMessage[] = []): Promise<AIResponse> {
     try {
-      const result = await this.model.generateContent(prompt);
+      // Convert history to Gemini format if necessary
+      // Google Generative AI SDK handles history in startChat
+      const chat = this.model.startChat({
+        history: history.map(msg => ({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        })),
+      });
+
+      const result = await chat.sendMessage(prompt);
       const response = await result.response;
       const text = response.text();
 

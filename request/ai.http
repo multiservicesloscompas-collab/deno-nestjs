@@ -1,0 +1,17 @@
+### Chat with AI (New Conversation)
+POST http://localhost:3000/ai/chat
+Content-Type: application/json
+
+{
+    "conversationId": "test-chat-001",
+    "message": "Hola, ¿quién eres?"
+}
+
+### Chat with AI (Continue Conversation)
+POST http://localhost:3000/ai/chat
+Content-Type: application/json
+
+{
+    "conversationId": "test-chat-001",
+    "message": "¿Qué acabamos de hablar?"
+}
