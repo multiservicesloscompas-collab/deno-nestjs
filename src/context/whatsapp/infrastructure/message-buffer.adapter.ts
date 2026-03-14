@@ -6,79 +6,54 @@ import {
 export const makeInMemoryMessageBuffer = (
   timeoutMs: number = 5000,
 ): MessageBufferPort => {
+  const makeKey = (conversationId: string, sender: string): string =>
+    `${conversationId}::${sender}`;
+
   const buffers: Map<string, string[]> = new Map();
   const timers: Map<string, number> = new Map();
   let onBufferReady: MessageBufferCallback | null = null;
 
-  // Helper to log buffer state for debugging
-  const logBufferState = (context: string) => {
-    const bufferKeys = Array.from(buffers.keys());
-    console.debug(
-      `[MessageBuffer] ${context} | Timeout: ${timeoutMs}ms | Active buffers: ${bufferKeys.length}`,
-      bufferKeys.length > 0
-        ? bufferKeys.map((key) => ({
-            sender: key,
-            messageCount: buffers.get(key)?.length ?? 0,
-            pendingMessages: buffers.get(key) ?? [],
-          }))
-        : "No active buffers",
-    );
-  };
-
   return {
-    addMessage: (sender, text) => {
-      // Initialize or add to buffer
-      const currentBuffer = buffers.get(sender) ?? [];
-      currentBuffer.push(text);
-      buffers.set(sender, currentBuffer);
+    addMessage: (conversationId, sender, text) => {
+      const key = makeKey(conversationId, sender);
 
-      console.debug(
-        `[MessageBuffer] ➕ ADD MESSAGE | Sender: ${sender} | Text: "${text}" | Buffer count: ${currentBuffer.length}`,
+      // Initialize or add to buffer
+      const currentBuffer = buffers.get(key) ?? [];
+      currentBuffer.push(text);
+      buffers.set(key, currentBuffer);
+
+      console.info(
+        `[MessageBuffer] ➕ ADD | Conversation: ${conversationId} | Sender: ${sender} | Buffered messages: ${currentBuffer.length}`,
       );
-      logBufferState("After add", sender);
 
       // Reset timer (Debounce)
-      if (timers.has(sender)) {
-        console.debug(
-          `[MessageBuffer] ⏱️ RESET TIMER | Sender: ${sender} | Clearing previous timer`,
-        );
-        clearTimeout(timers.get(sender));
+      if (timers.has(key)) {
+        clearTimeout(timers.get(key));
       }
 
       const timerIdx = setTimeout(async () => {
-        const finalMessages = buffers.get(sender) ?? [];
-        buffers.delete(sender);
-        timers.delete(sender);
-
-        console.debug(
-          `[MessageBuffer] ⏰ TIMER FIRED | Sender: ${sender} | Messages to merge: ${finalMessages.length}`,
-          finalMessages,
-        );
-        logBufferState("After timer fired", sender);
+        const finalMessages = buffers.get(key) ?? [];
+        buffers.delete(key);
+        timers.delete(key);
 
         if (finalMessages.length > 0 && onBufferReady) {
           const mergedText = finalMessages.join("\n");
           console.info(
-            `[MessageBuffer] 🚀 TRIGGERING CALLBACK | Sender: ${sender} | Merged text length: ${mergedText.length} chars`,
+            `[MessageBuffer] 🚀 FLUSH | Conversation: ${conversationId} | Sender: ${sender} | Messages: ${finalMessages.length}`,
           );
-          await onBufferReady(sender, mergedText);
+          await onBufferReady(conversationId, sender, mergedText);
         } else {
           console.warn(
-            `[MessageBuffer] ⚠️ TIMER FIRED BUT NO MESSAGES | Sender: ${sender} | finalMessages: ${finalMessages.length} | onBufferReady: ${!!onBufferReady}`,
+            `[MessageBuffer] ⚠️ FLUSH SKIPPED | Conversation: ${conversationId} | Sender: ${sender} | Messages: ${finalMessages.length} | Has callback: ${!!onBufferReady}`,
           );
         }
       }, timeoutMs);
 
-      timers.set(sender, timerIdx);
-      console.debug(
-        `[MessageBuffer] ✅ TIMER SET | Sender: ${sender} | Will fire in ${timeoutMs}ms`,
-      );
+      timers.set(key, timerIdx);
     },
     subscribe: (callback) => {
       onBufferReady = callback;
-      console.debug(
-        `[MessageBuffer] 📡 SUBSCRIBE | Callback registered: ${!!callback}`,
-      );
+      console.info("[MessageBuffer] 📡 SUBSCRIBE | Callback registered");
     },
   };
 };

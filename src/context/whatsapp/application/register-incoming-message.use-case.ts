@@ -1,4 +1,8 @@
-import { WhatsAppRepository, MessageBufferPort } from "./ports.ts";
+import {
+  WhatsAppRepository,
+  MessageBufferPort,
+  IncomingMessageDedupPort,
+} from "./ports.ts";
 import { MetaWebhookPayload } from "../domain/webhook-payload.interface.ts";
 import { WhatsAppMessage } from "../domain/whatsapp-message.interface.ts";
 import { ChatWithAIUseCase } from "../../ai/application/ports.ts";
@@ -13,20 +17,16 @@ export const makeRegisterIncomingMessageUseCase = (
   chatWithAIUseCase: ChatWithAIUseCase,
   sendMessageUseCase: SendMessageUseCase,
   messageBuffer: MessageBufferPort,
+  isDuplicateMessage: IncomingMessageDedupPort,
 ): RegisterIncomingMessageUseCase => {
-  messageBuffer.subscribe(async (sender, mergedText) => {
+  messageBuffer.subscribe(async (conversationId, sender, mergedText) => {
     try {
       console.info(
-        `[RegisterMessage] 📥 BUFFER READY | Sender: ${sender} | Text length: ${mergedText.length} chars`,
-      );
-      console.debug(
-        `[RegisterMessage] 📥 Merged text preview: "${mergedText.substring(0, 100)}${mergedText.length > 100 ? "..." : ""}"`,
+        `[RegisterMessage] 📥 BUFFER READY | Conversation: ${conversationId} | Sender: ${sender}`,
       );
 
-      const aiResponse = await chatWithAIUseCase(sender, mergedText);
-      console.debug(
-        `[IA] 🤖 Response preview: "${aiResponse.substring(0, 100)}${aiResponse.length > 100 ? "..." : ""}"`,
-      );
+      const aiConversationId = `${conversationId}:${sender}`;
+      const aiResponse = await chatWithAIUseCase(aiConversationId, mergedText);
 
       await sendMessageUseCase(sender, aiResponse);
       console.info(`[RegisterMessage] ✅ RESPONSE SENT | Sender: ${sender}`);
@@ -44,34 +44,43 @@ export const makeRegisterIncomingMessageUseCase = (
     const messageData = change?.value?.messages?.[0];
 
     if (!messageData) {
-      console.debug(
-        "[RegisterMessage] ⚠️ No message data in payload, skipping",
+      console.warn("[RegisterMessage] ⚠️ EMPTY PAYLOAD | No message data");
+      return;
+    }
+
+    const sender = messageData.from;
+    const conversationId = change.value.metadata.phone_number_id;
+    const text = messageData.text?.body;
+    const messageId = messageData.id;
+
+    if (!sender || !conversationId || !text || !messageId) {
+      console.warn(
+        "[RegisterMessage] ⚠️ Invalid inbound message: missing sender/conversationId/text/messageId",
+      );
+      return;
+    }
+
+    if (await isDuplicateMessage(messageId)) {
+      console.info(
+        `[RegisterMessage] ♻️ Duplicate message ignored | MessageID: ${messageId}`,
       );
       return;
     }
 
     const message: WhatsAppMessage = {
-      from: messageData.from,
+      from: sender,
       to: change.value.metadata.display_phone_number,
-      body: messageData.text.body,
+      body: text,
       timestamp: Number(messageData.timestamp),
-      messageId: messageData.id,
+      messageId,
     };
 
     console.info(
       `[RegisterMessage] 📨 NEW MESSAGE RECEIVED | From: ${message.from} | To: ${message.to} | MessageID: ${message.messageId}`,
     );
-    console.debug(
-      `[RegisterMessage] 📝 Message body: "${message.body}" | Timestamp: ${message.timestamp}`,
-    );
 
     await repository.save(message);
-    console.debug(`[RegisterMessage] 💾 Message saved to repository`);
 
-    // En lugar de procesar inmediatamente, añadimos al buffer
-    console.debug(
-      `[RegisterMessage] 📤 Adding to message buffer for sender: ${message.from}`,
-    );
-    messageBuffer.addMessage(message.from, message.body);
+    messageBuffer.addMessage(conversationId, message.from, message.body);
   };
 };

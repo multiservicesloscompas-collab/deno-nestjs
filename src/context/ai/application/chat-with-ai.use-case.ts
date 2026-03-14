@@ -1,38 +1,88 @@
 import { AIResponse } from "../domain/ai-message.interface.ts";
+import { AIMessage } from "../domain/ai-message.interface.ts";
 import { AIPort, ChatWithAIUseCase } from "./ports.ts";
 import { MemoryPort } from "./memory.port.ts";
 
+export interface ChatHistoryLimits {
+  maxHistoryMessages: number;
+  maxHistoryChars: number;
+}
+
+const defaultHistoryLimits: ChatHistoryLimits = {
+  maxHistoryMessages: 20,
+  maxHistoryChars: 12000,
+};
+
+const sliceHistoryByLimits = (
+  history: AIMessage[],
+  limits: ChatHistoryLimits,
+) => {
+  const maxMessages = Math.max(0, limits.maxHistoryMessages);
+  const maxChars = Math.max(0, limits.maxHistoryChars);
+
+  if (maxMessages === 0 || maxChars === 0) {
+    return [];
+  }
+
+  const reversed = [...history].reverse();
+  const selected: AIMessage[] = [];
+  let currentChars = 0;
+
+  for (const message of reversed) {
+    if (selected.length >= maxMessages) {
+      break;
+    }
+
+    const nextChars = currentChars + message.content.length;
+    if (nextChars > maxChars) {
+      break;
+    }
+
+    selected.push(message);
+    currentChars = nextChars;
+  }
+
+  return selected.reverse();
+};
+
 export const makeChatWithAIUseCase =
-  (aiPort: AIPort, memoryPort: MemoryPort): ChatWithAIUseCase =>
+  (
+    aiPort: AIPort,
+    memoryPort: MemoryPort,
+    historyLimits: ChatHistoryLimits = defaultHistoryLimits,
+  ): ChatWithAIUseCase =>
   async (conversationId: string, prompt: string) => {
     console.info(
-      `[ChatWithAI] 🎯 START | Conversation: ${conversationId} | Prompt length: ${prompt.length} chars`,
+      `[ChatWithAI] 🎯 START | Conversation: ${conversationId}`,
     );
 
-    // 1. Get history
-    const history = await memoryPort.get(conversationId);
-    console.debug(
-      `[ChatWithAI] 📖 History retrieved: ${history.length} messages`,
-    );
+    try {
+      const storedHistory = await memoryPort.get(conversationId);
+      const history = sliceHistoryByLimits(storedHistory, historyLimits);
 
-    // 2. Save user message immediately so it's not lost on error
-    console.debug(`[ChatWithAI] 💾 Appending user message to memory`);
-    await memoryPort.append(conversationId, { role: "user", content: prompt });
+      await memoryPort.append(conversationId, { role: "user", content: prompt });
 
-    // 3. Generate response using history
-    const response: AIResponse = await aiPort.generateText(prompt, history);
-    console.debug(
-      `[ChatWithAI] 🤖 AI response received: ${response.text.length} chars`,
-    );
+      console.info("[ChatWithAI] 🧠 LLM INPUT", {
+        conversationId,
+        prompt,
+        history,
+      });
 
-    // 4. Save model response
-    await memoryPort.append(conversationId, {
-      role: "model",
-      content: response.text,
-    });
-    console.debug(`[ChatWithAI] 💾 Model response saved`);
+      const response: AIResponse = await aiPort.generateText(prompt, history);
 
-    console.info(`[ChatWithAI] ✅ COMPLETE | Conversation: ${conversationId}`);
+      await memoryPort.append(conversationId, {
+        role: "model",
+        content: response.text,
+      });
 
-    return response.text;
+      console.info(`[ChatWithAI] ✅ COMPLETE | Conversation: ${conversationId}`);
+
+      return response.text;
+    } catch (error) {
+      console.error(
+        `[ChatWithAI] ❌ ERROR | Conversation: ${conversationId}`,
+        error,
+      );
+      throw error;
+    }
   };

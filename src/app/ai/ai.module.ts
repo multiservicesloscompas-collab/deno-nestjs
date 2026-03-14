@@ -37,8 +37,11 @@ export class AIModule {
         },
         {
           provide: CHAT_WITH_AI_USE_CASE,
-          useFactory: (aiPort: AIPort, memoryPort: MemoryPort) => 
-            makeChatWithAIUseCase(aiPort, memoryPort),
+          useFactory: (aiPort: AIPort, memoryPort: MemoryPort) =>
+            makeChatWithAIUseCase(aiPort, memoryPort, {
+              maxHistoryMessages: 20,
+              maxHistoryChars: 12000,
+            }),
           inject: [AI_PORT, MEMORY_PORT],
         },
       ],

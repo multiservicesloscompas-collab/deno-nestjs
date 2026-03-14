@@ -47,6 +47,142 @@ Content-Type: application/json
   ]
 }
 
+### Buffer continuidad - Mensaje 1/2 (mismo turno)
+POST {{urlbase}}/whatsapp/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "882352865105153",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "16505551111",
+              "phone_number_id": "123456123456"
+            },
+            "messages": [
+              {
+                "from": "1234567890",
+                "id": "wamid.turn1.msg1",
+                "timestamp": "1603094400",
+                "text": { "body": "hola" },
+                "type": "text"
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+### Buffer continuidad - Mensaje 2/2 (mismo turno)
+POST {{urlbase}}/whatsapp/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "882352865105153",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "16505551111",
+              "phone_number_id": "123456123456"
+            },
+            "messages": [
+              {
+                "from": "1234567890",
+                "id": "wamid.turn1.msg2",
+                "timestamp": "1603094401",
+                "text": { "body": "te cuento algo más" },
+                "type": "text"
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+### Idempotencia - Reintento con mismo messageId (debe ignorarse)
+POST {{urlbase}}/whatsapp/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "882352865105153",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "16505551111",
+              "phone_number_id": "123456123456"
+            },
+            "messages": [
+              {
+                "from": "1234567890",
+                "id": "wamid.turn1.msg2",
+                "timestamp": "1603094402",
+                "text": { "body": "duplicado" },
+                "type": "text"
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+### Payload inválido - sin sender/conversationId útil (debe ignorarse)
+POST {{urlbase}}/whatsapp/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "882352865105153",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "16505551111",
+              "phone_number_id": ""
+            },
+            "messages": [
+              {
+                "from": "",
+                "id": "wamid.invalid.msg",
+                "timestamp": "1603094499",
+                "text": { "body": "sin datos válidos" },
+                "type": "text"
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
 ### Enviar Mensaje (POST)
 POST {{urlbase}}/whatsapp/send
 Content-Type: application/json

@@ -8,10 +8,16 @@ export interface SendMessageInput {
 export type SendMessagePort = (input: SendMessageInput) => Promise<void>;
 export type SaveMessagePort = (message: WhatsAppMessage) => Promise<void>;
 
-export type MessageBufferCallback = (sender: string, text: string) => Promise<void>;
+export type MessageBufferCallback = (
+  conversationId: string,
+  sender: string,
+  consolidatedText: string,
+) => Promise<void>;
+
+export type IncomingMessageDedupPort = (messageId: string) => Promise<boolean>;
 
 export interface MessageBufferPort {
-  addMessage(sender: string, text: string): void;
+  addMessage(conversationId: string, sender: string, text: string): void;
   subscribe(callback: MessageBufferCallback): void;
 }
 
